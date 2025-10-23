@@ -1,0 +1,78 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import random
+from st_aggrid import AgGrid, GridOptionsBuilder
+st.set_page_config(page_title="Snowflake Streamlit App", layout="wide")
+
+
+
+# Sample DataFrame
+df1 = pd.DataFrame({
+    'Name': ['Alice', 'Bob', 'Charlie'],
+    'Age': [25, 30, 35],
+    'City': ['New York', 'Chicago', 'Los Angeles']
+})
+
+# Build grid options
+gb = GridOptionsBuilder.from_dataframe(df1)
+gb.configure_default_column(filter=True, sortable=True, resizable=True)
+grid_options = gb.build()
+
+# Display interactive grid
+AgGrid(df1, gridOptions=grid_options, enable_enterprise_modules=False)
+
+
+# Generate sample data
+np.random.seed(42)
+names = ['Alice', 'Bob', 'Charlie', 'David', 'Eva', 'Frank', 'Grace', 'Hannah', 'Ian', 'Julia']
+departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance']
+cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix']
+num_records = 8
+
+df = pd.DataFrame({
+    'name': np.random.choice(names, num_records),
+    'Age': np.random.randint(22, 65, size=num_records),
+    'active': np.random.choice([True, False], num_records),
+    'Department': np.random.choice(departments, num_records),
+    'City': np.random.choice(cities, num_records),
+    'Salary': np.random.randint(50000, 150000, size=num_records),
+    'Hire Date': [datetime.today() - timedelta(days=random.randint(0, 3650)) for _ in range(num_records)],
+    'Performance Score': np.round(np.random.uniform(1.0, 5.0, size=num_records), 2)
+})
+
+st.title("🔍 Interactive Table Comparison")
+
+col1, col2, col3  = st.columns(3)
+
+# --- Table 1: Hover-based UI ---
+with col1:
+    st.subheader("🕵️ Table 1: Hover to Discover")
+    st.caption("Sort, filter, and pin by hovering over column headers.")
+    st.data_editor(df, use_container_width=True)
+
+# --- Table 2: Explicit Controls ---
+with col2:
+    st.subheader("🧭 Table 2: Explicit Controls")
+
+    sort_column = st.selectbox("Sort by", options=df.columns, key="sort_col")
+    sort_order = st.radio("Order", ["Ascending", "Descending"], horizontal=True, key="sort_order")
+    pin_column = st.selectbox("Pin column (move to front)", options=df.columns, key="pin_col")
+
+    # Apply sort and pin
+    sorted_df = df.sort_values(by=sort_column, ascending=(sort_order == "Ascending"))
+    columns_order = [pin_column] + [col for col in sorted_df.columns if col != pin_column]
+    sorted_df = sorted_df[columns_order]
+
+    st.data_editor(sorted_df, use_container_width=True, num_rows="dynamic")
+
+    
+with col3:
+    st.subheader("🕵️ Table 1: Hover to Discover")
+    st.caption("Sort, filter, and pin by hovering over column headers.")
+    st.data_editor(df, use_container_width=True,num_rows="dynamic")
+
+
+
+
